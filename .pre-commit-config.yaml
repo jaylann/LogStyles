@@ -1,0 +1,15 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.9.1
+    hooks:
+      - id: black
+        language_version: python3
+  - repo: https://github.com/bndr/pipreqs
+    rev: master
+    hooks:
+      - id: pipreqs
+        name: pipreqs
+        entry: pipreqs --force .
+        language: python
+        types: [python]
+        stages: [commit]
