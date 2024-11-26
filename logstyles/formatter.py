@@ -83,6 +83,7 @@ def create_formatter(theme, base_format, delimiter=None, override_included_parts
                 # Part is not included or not applicable
                 pass
 
+
         # Combine parts with delimiter
         formatted_message = delimiter.join(parts_list)
         return formatted_message + '\n'
