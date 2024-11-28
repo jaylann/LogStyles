@@ -3,7 +3,7 @@
 ![PyPI](https://img.shields.io/pypi/v/logstyles)
 ![License](https://img.shields.io/pypi/l/logstyles)
 ![Python Versions](https://img.shields.io/pypi/pyversions/logstyles)
-![Python CI](https://github.com/jaylann/logstyles/actions/workflows/python-app.yml/badge.svg)
+![Tests](https://github.com/jaylann/logstyles/actions/workflows/python-app.yml/badge.svg)
 
 
 ## 🌟 Introduction
@@ -91,18 +91,24 @@ You can customize the formatter by specifying different parameters:
 
 ### 🎨 Themes
 
-- **Latte**
-- **Frappé**
-- **Macchiato**
-- **Mocha**
+- **Catpuccin Latte**
+- **Catpuccin Frappe**
+- **Catpuccin Macchiato**
+- **Catpuccin Mocha**
+- **Tokyo Night**
+- **Tokyo Night Storm**
 - **Tokyo Night Light**
 
 ### 📝 Formats
 
-- **Simple**: Minimalist format showing only the message.
-- **Detailed**: Includes time, level, module, function, line number, and message.
-- **Threaded**: Adds thread information to the log.
-- **Process**: Includes process information in the log.
+| **Format**       | **Example**                                                                                                                     |
+|------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **Simple**       | `This is a DEBUG message.`                                                                                                      |
+| **Detailed**     | `2024-11-28 15:11:49 \| DEBUG \| main \| main \| 39 \| This is a DEBUG message.`                                             |
+| **Threaded**     | `2024-11-28 15:11:49 \| DEBUG \| MainThread \| This is a DEBUG message.`                                                   |
+| **Process**      | `2024-11-28 15:11:49 \| DEBUG \| MainProcess \| This is a DEBUG message.`                                                  |
+| **Left Aligned** | `DEBUG   : This is a DEBUG message.`                                                                                           |
+| **Column**       | `2024-11-28 15:11:49 \| DEBUG \| main \| This is a DEBUG message.`                                                         |
 
 ## 🧪 Testing
 

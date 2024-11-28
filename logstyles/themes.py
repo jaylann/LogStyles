@@ -101,7 +101,7 @@ THEMES = {
             },
         },
     },
-    'Latte': {
+    'Catpuccin Latte': {
         'timestamp_format': '%Y-%m-%d %H:%M:%S',
         'time_color': '#9ca0b0',  # Overlay0
         'module_color': '#df8e1d',  # Yellow
@@ -133,7 +133,7 @@ THEMES = {
             },
         },
     },
-    'Frappe': {
+    'Catpuccin Frappe': {
         'timestamp_format': '%Y-%m-%d %H:%M:%S',
         'time_color': '#737994',  # Overlay0
         'module_color': '#e5c890',  # Yellow
@@ -165,7 +165,7 @@ THEMES = {
             },
         },
     },
-    'Macchiato': {
+    'Catpuccin Macchiato': {
         'timestamp_format': '%Y-%m-%d %H:%M:%S',
         'time_color': '#6e738d',  # Overlay0
         'module_color': '#eed49f',  # Yellow
@@ -197,7 +197,7 @@ THEMES = {
             },
         },
     },
-    'Mocha': {
+    'Catpuccin Mocha': {
         'timestamp_format': '%Y-%m-%d %H:%M:%S',
         'time_color': '#6c7086',  # Overlay0
         'module_color': '#f9e2af',  # Yellow
