@@ -12,11 +12,10 @@
 
 ## 🚀 Features
 
-- **Multiple Predefined Themes**: Choose from a variety of stylish themes like **Latte**, **Frappé**, **Macchiato**, **Mocha**, and **Tokyo Night Light**.
+- **Multiple Predefined Themes**: Choose from a variety of stylish themes like **Catpuccin** and **Tokyo Night**.
 - **Versatile Log Formats**: Utilize different log formats such as **Simple**, **Detailed**, **Threaded**, and **Process** to suit your needs.
 - **Color Customization**: Easily customize colors for different log levels and components.
 - **Seamless Integration with Loguru**: Effortlessly integrate LogStyles into your existing Loguru setup.
-- **Extensible Design**: Add your own themes and formats with minimal effort.
 
 ## 📦 Installation
 
@@ -40,7 +39,7 @@ from logstyles import LogStyles
 def main():
     # Create a formatter with the desired theme and format
     formatter = LogStyles.get_formatter(
-        theme_name='Mocha',          # Choose a theme
+        theme_name='Catpuccin Mocha',          # Choose a theme
         format_name='Detailed',      # Choose a format
         delimiter=' | ',             # Optional: Customize delimiter
         timestamp_format='%Y-%m-%d %H:%M:%S'  # Optional: Customize timestamp format

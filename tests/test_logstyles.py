@@ -188,14 +188,14 @@ class TestLogStyles(unittest.TestCase):
         """Test that an invalid format name raises a ValueError."""
         with self.assertRaises(ValueError):
             LogStyles.get_formatter(
-                theme_name='Mocha',
+                theme_name='Catpuccin Mocha',
                 format_name='InvalidFormat'
             )
 
     def test_escape_angle_brackets(self):
         """Test that angle brackets are properly escaped."""
         formatter = LogStyles.get_formatter(
-            theme_name='Mocha',
+            theme_name='Catpuccin Mocha',
             format_name='Simple'
         )
         # Create a mock record with angle brackets in the message
@@ -239,7 +239,7 @@ class TestLogStyles(unittest.TestCase):
     def test_custom_delimiter(self):
         """Test that a custom delimiter is applied correctly."""
         formatter = LogStyles.get_formatter(
-            theme_name='Mocha',
+            theme_name='Catpuccin Mocha',
             format_name='Process',
             delimiter=' || '
         )
