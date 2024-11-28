@@ -14,7 +14,7 @@ LICENSE = (HERE / "LICENSE").read_text(encoding="utf-8")
 
 setup(
     name="logstyles",  # Required
-    version="0.1.0",  # Required
+    version="0.1.1",  # Required
     description="A logging styling library for Loguru with customizable themes and formats.",  # Required
     long_description=README,  # Optional
     long_description_content_type="text/markdown",  # Optional (see note above)
