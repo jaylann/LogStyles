@@ -1,4 +1,3 @@
-```markdown
 # LogStyles
 
 ![PyPI](https://img.shields.io/pypi/v/logstyles)
@@ -123,8 +122,3 @@ For any inquiries or feedback, feel free to reach out:
 
 - **Email**: [Justin@Lanfermann.DEV](mailto:Justin@Lanfermann.dev)
 - **GitHub**: [Justin Lanfermann](https://github.com/jaylann)
-
----
-
-✨ *Enhance your logging experience with LogStyles and make your logs both functional and beautiful!*
-```
