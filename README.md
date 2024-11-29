@@ -80,7 +80,7 @@ print("Available Formats:", available_formats)
 
 You can customize the formatter by specifying different parameters:
 
-- **`theme_name`**: The name of the theme you want to use (e.g., `'Latte'`, `'Frappé'`).
+- **`theme_name`**: The name of the theme you want to use (e.g., `'Catpuccin Latte'`, `'Tokyo Night Dark'`).
 - **`format_name`**: The name of the log format (e.g., `'Simple'`, `'Detailed'`).
 - **`delimiter`**: (Optional) A custom delimiter to separate log parts.
 - **`timestamp_format`**: (Optional) Customize the timestamp format using `strftime` directives.
