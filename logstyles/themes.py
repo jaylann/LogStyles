@@ -228,5 +228,105 @@ THEMES = {
                 'message_bg': '#eba0ac',
             },
         },
+
     },
+    'Darcula': {
+        'timestamp_format': '%Y-%m-%d %H:%M:%S',
+        'time_color': '#BBBBBB',  # stdOutput
+        'module_color': '#FFC66D',  # function
+        'function_color': '#6897BB',  # number
+        'line_color': '#287BDE',  # link
+        'thread_color': '#B9BCD1',  # typeDef
+        'process_color': '#299999',  # ANSICyan
+        'styles': {
+            'DEBUG': {
+                'level_fg': '#629755',  # docComment (green)
+                'message_fg': '#629755',
+            },
+            'INFO': {
+                'level_fg': '#6A8759',  # string (green)
+                'message_fg': '#A9B7C6',  # fg (foreground)
+            },
+            'WARNING': {
+                'level_fg': '#BE9117',  # warnStripe (orange)
+                'message_fg': '#BE9117',
+            },
+            'ERROR': {
+                'level_fg': '#CC666E',  # errorMsg (red)
+                'message_fg': '#CC666E',
+            },
+            'CRITICAL': {
+                'level_fg': '#9E2927',  # errorStripe (dark red)
+                'message_fg': '#A9B7C6',  # fg (foreground)
+                'message_bg': '#9E2927',  # errorStripe
+            },
+        },
+    },
+    'GitHub Light': {
+        'timestamp_format': '%Y-%m-%d %H:%M:%S',
+        'time_color': '#24292f',  # fg.default
+        'module_color': '#0366d6',  # accent.fg
+        'function_color': '#6f42c1',  # purple[5]
+        'line_color': '#005cc5',     # blue[6]
+        'thread_color': '#d73a49',  # red[5]
+        'process_color': '#28a745',  # green[5]
+        'styles': {
+            'DEBUG': {
+                'level_fg': '#6a737d',  # fg.muted
+                'message_fg': '#6a737d',
+            },
+            'INFO': {
+                'level_fg': '#22863a',  # success.emphasis
+                'message_fg': '#24292f',  # fg.default
+            },
+            'WARNING': {
+                'level_fg': '#b08800',  # attention.fg
+                'message_fg': '#b08800',
+            },
+            'ERROR': {
+                'level_fg': '#d73a49',  # danger.fg
+                'message_fg': '#d73a49',
+            },
+            'CRITICAL': {
+                'level_fg': '#86181d',  # severe.fg
+                'message_fg': '#ffffff',  # white
+                'message_bg': '#86181d',
+            },
+        },
+    },
+
+    'GitHub Dark': {
+        'timestamp_format': '%Y-%m-%d %H:%M:%S',
+        'time_color': '#c9d1d9',  # fg.default
+        'module_color': '#58a6ff',  # accent.fg
+        'function_color': '#d2a8ff',  # purple[4]
+        'line_color': '#1f6feb',     # blue[5]
+        'thread_color': '#f778ba',  # pink[4]
+        'process_color': '#3fb950',  # green[4]
+        'styles': {
+            'DEBUG': {
+                'level_fg': '#8b949e',  # fg.muted
+                'message_fg': '#8b949e',
+            },
+            'INFO': {
+                'level_fg': '#58a6ff',  # accent.fg
+                'message_fg': '#c9d1d9',  # fg.default
+            },
+            'WARNING': {
+                'level_fg': '#e3b341',  # attention.fg
+                'message_fg': '#e3b341',
+            },
+            'ERROR': {
+                'level_fg': '#f85149',  # danger.fg
+                'message_fg': '#f85149',
+            },
+            'CRITICAL': {
+                'level_fg': '#ff7b72',  # severe.fg
+                'message_fg': '#ffffff',  # white
+                'message_bg': '#ff7b72',
+            },
+        },
+    },
+
+
 }
