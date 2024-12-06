@@ -1,24 +1,33 @@
 # logstyles/formatter.py
 import threading
-
 from .utils import hex_to_ansi, reset_code
 
+# logstyles/formatter.py
 def escape_angle_brackets(text):
-    """Escapes '<' and '>' characters in the given text."""
-    return text.replace('<', '\\<').replace('>', '\\>')
+    """Escapes '<' and '>' characters in the given text using HTML entities."""
+    return text.replace('<', '&lt;').replace('>', '&gt;')
 
+
+# logstyles/formatter.py
 def create_formatter(theme, base_format, delimiter=None, override_included_parts=None):
     timestamp_format = theme.get('timestamp_format', '%Y-%m-%d %H:%M:%S')
     styles = theme['styles']
     delimiter = delimiter or base_format['delimiter']
     parts_order = base_format['parts_order']
 
-    included_parts = [
-        part.replace('_part', '') for part in parts_order
-    ]
-
+    # Determine which parts to include
     if override_included_parts is not None:
         included_parts = override_included_parts
+    else:
+        included_parts = [
+            part.replace('_part', '') for part in parts_order
+        ]
+
+    # Filter parts_order based on included_parts
+    parts_order = [p for p in parts_order if p.replace('_part', '') in included_parts]
+    remaining_parts = [p for p in included_parts if f"{p}_part" not in parts_order]
+    parts_order.extend(f"{p}_part" for p in remaining_parts)
+
 
     # Default and maximum widths for fields
     field_widths_config = {
@@ -55,31 +64,35 @@ def create_formatter(theme, base_format, delimiter=None, override_included_parts
 
         fields = {}
 
-        # Prepare field values
-        for part in parts_order:
-            part_key = part.replace('_part', '')
-            if part_key == 'time' and 'time' in included_parts:
-                fields['time'] = time_str
-            elif part_key == 'level' and 'level' in included_parts:
-                fields['level'] = level_name
-            elif part_key == 'module' and 'module' in included_parts:
-                module_name = escape_angle_brackets(record['module'])
-                fields['module'] = module_name
-            elif part_key == 'function' and 'function' in included_parts:
-                function_name = escape_angle_brackets(record['function'])
-                fields['function'] = function_name
-            elif part_key == 'line' and 'line' in included_parts:
-                line_str = str(record['line'])
-                fields['line'] = line_str
-            elif part_key == 'thread_name' and 'thread_name' in included_parts:
-                thread_name = escape_angle_brackets(record['thread'].name)
-                fields['thread_name'] = thread_name
-            elif part_key == 'process_name' and 'process_name' in included_parts:
-                process_name = escape_angle_brackets(record['process'].name)
-                fields['process_name'] = process_name
-            elif part_key == 'message' and 'message' in included_parts:
-                message = escape_angle_brackets(record['message'])
-                fields['message'] = message
+        # Retrieve values, prioritizing record['extra'] for custom fields
+        # Only set fields if they are included
+        if 'time' in included_parts:
+            fields['time'] = time_str
+        if 'level' in included_parts:
+            fields['level'] = level_name
+
+        # For fields that can be overridden by extra:
+        if 'module' in included_parts:
+            module_name = escape_angle_brackets(record['extra'].get('module', record['module']))
+            fields['module'] = module_name
+        if 'function' in included_parts:
+            function_name = escape_angle_brackets(record['extra'].get('function', record['function']))
+            fields['function'] = function_name
+        if 'line' in included_parts:
+            line_val = record['extra'].get('line', record['line'])
+            line_str = escape_angle_brackets(str(line_val))
+            fields['line'] = line_str
+        if 'thread_name' in included_parts:
+            thread_val = record['extra'].get('thread_name', record['thread'].name)
+            thread_name = escape_angle_brackets(thread_val)
+            fields['thread_name'] = thread_name
+        if 'process_name' in included_parts:
+            process_val = record['extra'].get('process_name', record['process'].name)
+            process_name = escape_angle_brackets(process_val)
+            fields['process_name'] = process_name
+        if 'message' in included_parts:
+            message = escape_angle_brackets(record['message'])
+            fields['message'] = message
 
         # Update current field widths up to maximums
         with field_widths_lock:

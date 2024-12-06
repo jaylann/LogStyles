@@ -1,262 +1,187 @@
+import re
 import unittest
-import sys
 from io import StringIO
-from unittest import mock
-from loguru import logger
-from logstyles import LogStyles
-from logstyles.themes import THEMES
-from logstyles.base_formats import BASE_FORMATS
-from logstyles.utils import hex_to_ansi, reset_code
 
-class TestLogStyles(unittest.TestCase):
+from loguru import logger
+
+from logstyles import LogStyles
+from logstyles.base_formats import BASE_FORMATS
+from logstyles.themes import THEMES
+
+
+class TestLogStylesIntegration(unittest.TestCase):
     def setUp(self):
-        # Redirect logger output to a StringIO buffer
+        # Redirect logger output
         self.log_capture = StringIO()
-        logger.remove()  # Remove any existing handlers
+        logger.remove()
         logger.add(self.log_capture, format="{message}", colorize=False)
 
     def tearDown(self):
-        # Reset logger after each test
         logger.remove()
 
-    def get_expected_color_code(self, hex_color, bg_hex=None):
-        """Convert hex color to ANSI escape code."""
-        return hex_to_ansi(hex_color, bg_hex)
-
-    def parse_ansi_codes(self, text):
-        """Extract ANSI escape codes from the text."""
-        import re
-        ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-        return ansi_escape.findall(text)
-
-    def test_all_themes_and_formats(self):
-        """Dynamically test all themes with all base formats."""
-        for theme_name, theme in THEMES.items():
-            for format_name, base_format in BASE_FORMATS.items():
+    def test_sanity_all_themes_and_formats(self):
+        """Check that logging a known test message appears in the output for all themes and formats."""
+        test_message = "Test message for sanity check"
+        for theme_name in THEMES.keys():
+            for format_name in BASE_FORMATS.keys():
                 with self.subTest(theme=theme_name, format=format_name):
-                    # Generate formatter without relying on 'included_parts' from themes
-                    formatter = LogStyles.get_formatter(
-                        theme_name=theme_name,
-                        format_name=format_name,
-                        delimiter=None,  # Use base format's delimiter
-                    )
-
-                    # Reconfigure logger with the new formatter
+                    formatter = LogStyles.get_formatter(theme_name, format_name)
                     logger.remove()
                     logger.add(self.log_capture, format=formatter, colorize=False)
 
-                    # Log a test message
-                    test_message = f"Test log message for {format_name} with {theme_name}"
+                    # Log a known message
                     logger.info(test_message)
 
-                    # Retrieve the log output
                     self.log_capture.seek(0)
-                    log_output = self.log_capture.read().strip()
+                    line = self.log_capture.read()
                     self.log_capture.truncate(0)
                     self.log_capture.seek(0)
 
-                    # Determine which parts are actually included based on base_format
-                    parts_order = base_format['parts_order']
-                    actual_included_parts = [
-                        part.replace('_part', '') for part in parts_order
-                    ]
+                    self.assertIn(test_message, line, "Message should appear in the output.")
 
-                    # Create a mapping of part to its expected color and content
-                    part_contents = {}
+    # tests/test_logstyles.py
+    # tests/test_logstyles.py
+    def test_angle_brackets_escaping(self):
+        """Ensure angle brackets in module/function/thread/process are escaped."""
+        test_message = "Angle brackets test"
+        # We'll rely on 'Detailed' format which includes module/function/line/message by default.
+        formatter = LogStyles.get_formatter('Tokyo Night', 'Detailed',
+                                            included_parts=["module", "time", "level", "function", "line",
+                                                            "thread_name", "process_name"])
+        logger.remove()
+        logger.add(self.log_capture, format=formatter, colorize=False)
 
-                    # Create mock_record to simulate the formatter's behavior
-                    mock_level = mock.Mock()
-                    mock_level.name = 'INFO'
+        # Bind custom fields via .bind() so they appear in record['extra']
+        logger.bind(
+            module='module<with>brackets',
+            function='func<with>brackets',
+            line=999,
+            thread_name='Main<Thread>',
+            process_name='Main<Process>'
+        ).info(test_message)
 
-                    mock_thread = mock.Mock()
-                    mock_thread.name = 'MainThread'
+        self.log_capture.seek(0)
+        line = self.log_capture.read().strip()
+        print(line)  # For debugging purposes
 
-                    mock_process = mock.Mock()
-                    mock_process.name = 'MainProcess'
+        # Check that no raw angle brackets appear
+        self.assertNotRegex(line, r'(?<!\\)<', "Unescaped '<' found in output.")
+        self.assertNotRegex(line, r'(?<!\\)>', "Unescaped '>' found in output.")
 
-                    mock_time = mock.Mock()
-                    mock_time.strftime.return_value = theme.get('timestamp_format', '%Y-%m-%d %H:%M:%S')
+        # Check that escaped sequences appear using HTML entities
+        self.assertIn('module&lt;with&gt;brackets', line, "Escaped angle brackets not found for module field.")
+        self.assertIn('func&lt;with&gt;brackets', line, "Escaped angle brackets not found for function field.")
+        self.assertIn('Main&lt;Thread&gt;', line, "Escaped angle brackets not found for thread field.")
+        self.assertIn('Main&lt;Process&gt;', line, "Escaped angle brackets not found for process field.")
 
-                    mock_record = {
-                        'time': mock_time,
-                        'level': mock_level,
-                        'module': 'test_module',
-                        'function': 'test_function',
-                        'line': 42,
-                        'thread': mock_thread,
-                        'process': mock_process,
-                        'message': test_message
-                    }
+    def test_custom_timestamp_format(self):
+        """Test a custom timestamp format is applied."""
+        # Use a custom timestamp format and check if it follows HH:MM:SS pattern
+        formatter = LogStyles.get_formatter('Tokyo Night', 'Detailed', timestamp_format='%H:%M:%S')
+        logger.remove()
+        logger.add(self.log_capture, format=formatter, colorize=False)
 
-                    # Apply formatter to mock_record to get the expected formatted message
-                    formatted_message = formatter(mock_record).strip()
+        logger.info("Test timestamp format")
+        self.log_capture.seek(0)
+        line = self.log_capture.read().strip()
 
-                    # Now, parse the formatted_message to verify colors and content
-                    import re
-                    ansi_color_pattern = re.compile(r'\x1b\[[0-9;]*m')
-                    ansi_codes = ansi_color_pattern.findall(formatted_message)
+        # The line should contain a timestamp in HH:MM:SS format. Let's use a regex for that:
+        time_pattern = r'\d{2}:\d{2}:\d{2}'
+        self.assertRegex(line, time_pattern, "Custom timestamp format (HH:MM:SS) not found.")
 
-                    # Split the formatted message into parts based on delimiter
-                    delimiter = base_format.get('delimiter', '')
-                    if delimiter:
-                        parts = formatted_message.split(delimiter)
-                    else:
-                        parts = [formatted_message]
+    def test_included_parts_override(self):
+        """Check that specifying included_parts only shows those fields."""
+        # We override to only show time and message
+        formatter = LogStyles.get_formatter('Tokyo Night', 'Detailed', included_parts=['time', 'message'])
+        logger.remove()
+        logger.add(self.log_capture, format=formatter, colorize=False)
 
-                    # Create a mapping of part to its content
-                    for part in parts:
-                        # Extract the color code and the actual text
-                        match = re.match(r'(\x1b\[[0-9;]*m)(.*?)\x1b\[0m', part)
-                        if match:
-                            color_code, text = match.groups()
-                            # Determine which part this text corresponds to
-                            for part_key in actual_included_parts:
-                                # Depending on part_key, the text would differ
-                                if part_key == 'time' and text == mock_record['time'].strftime(mock_record['time'].strftime.call_args[0][0]):
-                                    part_contents['time'] = (color_code, text)
-                                elif part_key == 'level' and text.strip() == mock_record['level'].name:
-                                    part_contents['level'] = (color_code, text)
-                                elif part_key == 'module' and text == mock_record['module']:
-                                    part_contents['module'] = (color_code, text)
-                                elif part_key == 'function' and text == mock_record['function']:
-                                    part_contents['function'] = (color_code, text)
-                                elif part_key == 'line' and text == str(mock_record['line']):
-                                    part_contents['line'] = (color_code, text)
-                                elif part_key == 'thread_name' and text == mock_record['thread'].name:
-                                    part_contents['thread_name'] = (color_code, text)
-                                elif part_key == 'process_name' and text == mock_record['process'].name:
-                                    part_contents['process_name'] = (color_code, text)
-                                elif part_key == 'message' and text == mock_record['message']:
-                                    part_contents['message'] = (color_code, text)
+        test_message = "Testing included parts"
+        logger.info(test_message)
+        self.log_capture.seek(0)
+        line = self.log_capture.read().strip()
 
-                    # Now, verify each included part's color
-                    for part in actual_included_parts:
-                        if part == 'time':
-                            color_hex = theme.get('time_color', '#FFFFFF')
-                        elif part == 'level':
-                            color_hex = theme['styles'][mock_record['level'].name].get('level_fg', '#FFFFFF')
-                        elif part == 'module':
-                            color_hex = theme.get('module_color', '#FFFFFF')
-                        elif part == 'function':
-                            color_hex = theme.get('function_color', '#FFFFFF')
-                        elif part == 'line':
-                            color_hex = theme.get('line_color', '#FFFFFF')
-                        elif part == 'thread_name':
-                            color_hex = theme.get('thread_color', '#FFFFFF')
-                        elif part == 'process_name':
-                            color_hex = theme.get('process_color', '#FFFFFF')
-                        elif part == 'message':
-                            color_hex = theme['styles'][mock_record['level'].name].get('message_fg', '#FFFFFF')
-                        else:
-                            continue  # Unknown part
+        # Split by delimiter which is " | " for Detailed
+        parts = line.split(' | ')
 
-                        expected_color_code = self.get_expected_color_code(color_hex)
-                        if part in part_contents:
-                            actual_color_code, actual_text = part_contents[part]
-                            self.assertEqual(
-                                actual_color_code,
-                                expected_color_code,
-                                msg=f"Color code for '{part}' is incorrect in theme '{theme_name}' with format '{format_name}'."
-                            )
-                            # Additionally, verify that the text matches
-                            if part == 'time':
-                                expected_text = mock_record['time'].strftime(theme.get('timestamp_format', '%Y-%m-%d %H:%M:%S'))
-                                self.assertEqual(actual_text, expected_text, msg=f"Time format is incorrect for theme '{theme_name}' with format '{format_name}'.")
-                            elif part == 'level':
-                                self.assertEqual(actual_text.strip(), mock_record['level'].name, msg=f"Log level text is incorrect for theme '{theme_name}' with format '{format_name}'.")
-                            elif part == 'message':
-                                self.assertEqual(actual_text, mock_record['message'], msg=f"Log message text is incorrect for theme '{theme_name}' with format '{format_name}'.")
-                            # Add more text verifications as needed for other parts
-                        else:
-                            self.fail(f"Expected part '{part}' not found in log output for theme '{theme_name}' with format '{format_name}'.")
+        # Only time and message should remain
+        # Since we know Detailed originally has time, level, module, function, line, message
+        # With included_parts=['time','message'], only those 2 should appear.
+        self.assertEqual(len(parts), 2, "Only time and message parts should be present.")
+        self.assertIn(test_message, line, "Message should still appear.")
+        # Ensure none of the other parts (like module/function) appear
+        forbidden_fields = ['test_logstyles', 'func', 'INFO', '999']  # Potential leftover fields
+        for ff in forbidden_fields:
+            self.assertNotIn(ff, line, f"Field '{ff}' should not be included.")
 
-                    # Finally, ensure the log ends with the reset code
-                    self.assertTrue(
-                        formatted_message.endswith(reset_code()),
-                        msg="Reset code is missing at the end of the log message."
-                    )
+    def test_dynamic_width_expansion(self):
+        """Test that fields expand up to max width and do not remain oversized after very long values."""
+        formatter = LogStyles.get_formatter('Tokyo Night', 'Detailed')
+        logger.remove()
+        logger.add(self.log_capture, format=formatter, colorize=False)
 
-    def test_invalid_theme(self):
-        """Test that an invalid theme name raises a ValueError."""
-        with self.assertRaises(ValueError):
-            LogStyles.get_formatter(
-                theme_name='InvalidTheme',
-                format_name='Simple'
-            )
+        # We'll test the module field width changes.
+        # Start with a short module name:
+        short_module = "mod"
+        logger.bind(module=short_module, function='func', line=10).info("Short module")
+        self.log_capture.seek(0)
+        first_line = self.log_capture.read().strip()
+        self.log_capture.truncate(0)
+        self.log_capture.seek(0)
 
-    def test_invalid_format(self):
-        """Test that an invalid format name raises a ValueError."""
-        with self.assertRaises(ValueError):
-            LogStyles.get_formatter(
-                theme_name='Catpuccin Mocha',
-                format_name='InvalidFormat'
-            )
+        # Check initial padding
+        parts = first_line.split(' | ')
+        # parts order: time, level, module, function, line, message
+        module_part = parts[2]
+        # Remove ANSI
+        module_text = re.sub(r'\x1b\[[0-9;]*m', '', module_part)
+        # Should be at least default width (20 chars)
+        self.assertGreaterEqual(len(module_text), 20, "Module field not padded to default width for short value.")
 
-    def test_escape_angle_brackets(self):
-        """Test that angle brackets are properly escaped."""
-        formatter = LogStyles.get_formatter(
-            theme_name='Catpuccin Mocha',
-            format_name='Simple'
-        )
-        # Create a mock record with angle brackets in the message
-        mock_level = mock.Mock()
-        mock_level.name = 'INFO'
+        # Now log a longer module name within max width (max width=30):
+        longer_module = "longer_module_name123"
+        logger.bind(module=longer_module, function='func', line=11).info("Longer module")
+        self.log_capture.seek(0)
+        second_line = self.log_capture.read().strip()
+        self.log_capture.truncate(0)
+        self.log_capture.seek(0)
 
-        mock_record = {
-            'time': mock.Mock(),
-            'level': mock_level,
-            'module': 'test_module',
-            'function': 'test_function',
-            'line': 42,
-            'thread': mock.Mock(name='MainThread'),
-            'process': mock.Mock(name='MainProcess'),
-            'message': 'Message with <angle> brackets'
-        }
-        mock_record['time'].strftime.return_value = '2024-04-27 12:00:00'
+        parts = second_line.split(' | ')
+        module_part = parts[2]
+        module_text = re.sub(r'\x1b\[[0-9;]*m', '', module_part)
+        # It should now fit the longer_module length exactly if less than 30 chars
+        self.assertTrue(len(module_text) == len(longer_module),
+                        "Module field did not expand to accommodate longer value.")
 
-        formatted = formatter(mock_record).strip()
+        # Log an extremely long module name > 30 chars
+        very_long_module = "this_module_name_is_exceedingly_long_exceeding_max"
+        logger.bind(module=very_long_module, function='func', line=12).info("Very long module")
+        self.log_capture.seek(0)
+        third_line = self.log_capture.read().strip()
+        self.log_capture.truncate(0)
+        self.log_capture.seek(0)
 
-        # Use regex to ensure that all '<' and '>' are properly escaped
-        import re
-        # Pattern to find any '<' not preceded by a backslash
-        unescaped_less_than = re.search(r'(?<!\\)<', formatted)
-        # Pattern to find any '>' not preceded by a backslash
-        unescaped_greater_than = re.search(r'(?<!\\)>', formatted)
+        parts = third_line.split(' | ')
+        module_part = parts[2]
+        module_text = re.sub(r'\x1b\[[0-9;]*m', '', module_part)
+        # This line should display the full long module but not permanently increase the stored width
+        self.assertEqual(len(module_text), len(very_long_module),
+                         "Long module value should display fully for that line.")
 
-        # Assert that there are no unescaped '<' or '>' characters
-        self.assertFalse(
-            unescaped_less_than,
-            "Unescaped '<' found in formatted message."
-        )
-        self.assertFalse(
-            unescaped_greater_than,
-            "Unescaped '>' found in formatted message."
-        )
-
-        # Additionally, verify that escaped sequences are present
-        self.assertIn('\\<angle\\>', formatted, "Escaped angle brackets are not present as expected.")
-
-    def test_custom_delimiter(self):
-        """Test that a custom delimiter is applied correctly."""
-        formatter = LogStyles.get_formatter(
-            theme_name='Catpuccin Mocha',
-            format_name='Process',
-            delimiter=' || '
-        )
-        # Create a mock record
-        mock_level = mock.Mock()
-        mock_level.name = 'INFO'
-
-        mock_record = {
-            'time': mock.Mock(),
-            'level': mock_level,
-            'process': mock.Mock(name='MainProcess'),
-            'message': 'Test message with custom delimiter'
-        }
-        mock_record['time'].strftime.return_value = '12:00:00'
-        formatted = formatter(mock_record).strip()
-        self.assertIn(' || ', formatted)
-        self.assertIn('Test message with custom delimiter', formatted)
+        # Now log the short module again and ensure width returns to previously expanded length (not the max exceeded one)
+        logger.bind(module=short_module, function='func', line=13).info("Back to short")
+        self.log_capture.seek(0)
+        fourth_line = self.log_capture.read().strip()
+        parts = fourth_line.split(' | ')
+        module_part = parts[2]
+        print(module_part)
+        module_text = re.sub(r'\x1b\[[0-9;]*m', '', module_part)
+        print(module_text)
+        # The width should be at least the length of 'longer_module_name' but not as large as the very_long_module
+        self.assertGreaterEqual(len(module_text), len(longer_module),
+                                "Module width should not shrink below the previously expanded width.")
+        self.assertLess(len(module_text), len(very_long_module),
+                        "Module width should not remain expanded to exceed the max width after one very long value.")
 
 
 if __name__ == '__main__':

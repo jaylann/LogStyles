@@ -1,4 +1,5 @@
 # logstyles/__init__.py
+from os import times
 
 from .base_formats import BASE_FORMATS
 from .formatter import create_formatter
@@ -29,7 +30,7 @@ class LogStyles:
             base_format = base_format.copy()
             base_format['delimiter'] = delimiter
 
-        return create_formatter(theme, base_format)
+        return create_formatter(theme, base_format, delimiter, included_parts)
 
     @staticmethod
     def list_themes():
