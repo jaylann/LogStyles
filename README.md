@@ -127,3 +127,9 @@ For any inquiries or feedback, feel free to reach out:
 
 - **Email**: [Justin@Lanfermann.DEV](mailto:Justin@Lanfermann.dev)
 - **GitHub**: [Justin Lanfermann](https://github.com/jaylann)
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://lanfermann.dev">Justin Lanfermann</a>
+</p>
